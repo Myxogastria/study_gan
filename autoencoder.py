@@ -21,14 +21,14 @@ one_hot_test = keras.utils.to_categorical(label_test, num_classes=10)
 
 
 n_class = 10
-# n_filter = 10
-# kernel_size = 5
-# n_feature = 3
-# epochs = 30
-n_filter = 3
+n_filter = 10
 kernel_size = 5
 n_feature = 3
-epochs = 3
+epochs = 30
+# n_filter = 3
+# kernel_size = 5
+# n_feature = 3
+# epochs = 3
 
 shape_before_transconv = np.append(np.array(img_size)-kernel_size+1, n_filter)
 
@@ -167,18 +167,27 @@ for i_class in range(n_class):
 
 # 訓練データのクラスごとに，特徴量0の散布図をプロット
 plt.close('all')
-i_plot = 1
-for class_data in range(n_class):
-    img_data = img_train[label_train==class_data, :, :, :]
-    feature_data = encoder.predict(img_data)
-
-    for class_feature in range(n_class):
-        plt.subplot(n_class, n_class, i_plot)
-
-        plt.scatter(i_feature_traini_feature_train[:, 0, class_feature])
-        plt.xlim((0, 1))
-        plt.ylim((0, 1))
-        plt.title('cft:{}, dat:{}'.format(class_feature, class_data))
-        i_plot += 1
+i_feature = 0
+for i_class in range(n_class):
+    i_img_train = img_train[label_train==i_class, :, :, :]
+    i_feature_train = encoder.predict(i_img_train)
+    i_plot = 1
+    fig, _ = plt.subplots(n_class, n_class)
+    for class_y in range(n_class):
+        for class_x in range(n_class):
+            plt.subplot(n_class, n_class, i_plot)
+            if class_y == class_x:
+                plt.hist(i_feature_train[:, i_feature, class_y], bins=10, range=(0, 1), density=True)
+                plt.ylim((0, 10))
+            else:
+                plt.scatter(i_feature_train[:, i_feature, class_x], i_feature_train[:, i_feature, class_y], s=3)
+                plt.xlim((0, 1))
+                plt.ylim((0, 1))
+            if class_y == 0:
+                plt.title('{}'.format(class_x))
+            if class_x == 0:
+                plt.ylabel('{}'.format(class_y))
+            i_plot += 1
+    fig.suptitle("scatter plot of {}th feature of class {}".format(i_feature, i_class))
 plt.show(block=False)
 
