@@ -24,7 +24,7 @@ n_class = 10
 n_filter = 5
 kernel_size = 5
 n_feature = 2
-epochs_discriminator = 10
+epochs_discriminator = 3
 epochs_generator = 3
 # n_filter = 3
 # kernel_size = 5
@@ -34,7 +34,7 @@ epochs_generator = 3
 # time0 = time.time()
 
 input_image = lyr.Input(name='input_image', shape=(28, 28, 1))
-filtered = lyr.Conv2D(n_filter, name='filter', kernel_size=(kernel_size, kernel_size), activation='relu', input_shape=np.array([*img_size, 1]))(input_image)
+filtered = lyr.Conv2D(n_filter, name='filter', kernel_size=(kernel_size, kernel_size), activation=lambda x: keras.backend.relu(x, alpha=0.01), input_shape=np.array([*img_size, 1]))(input_image)
 filtered_flattened = lyr.Flatten(name='filter_flatten')(filtered)
 
 input_label = lyr.Input(name='input_label', shape=(10, ))
@@ -50,8 +50,8 @@ label_noise = lyr.Lambda(lambda x: tf.keras.backend.sum(x, axis=1), name='label_
 shape_before_transconv = np.append(np.array(img_size)-kernel_size+1, n_filter)
 
 noise_flattened = lyr.Flatten(name='noise_flatten')(input_noise)
-before_transconv = lyr.Dense(shape_before_transconv.prod(), 
-    activation='relu', input_shape=(None, n_feature*n_class), name='generator_dense')(noise_flattened)
+before_transconv = lyr.Dense(shape_before_transconv.prod(), activation=lambda x: keras.backend.relu(x, alpha=0.01), 
+    input_shape=(None, n_feature*n_class), name='generator_dense')(noise_flattened)
 before_transconv_reshaped = lyr.Reshape(shape_before_transconv, name='dense_reshape')(before_transconv)
 transconv = lyr.Conv2DTranspose(1, kernel_size=(kernel_size, kernel_size), name='transconv', 
     input_shape=shape_before_transconv)(before_transconv_reshaped)
@@ -101,11 +101,11 @@ def gan_input_generator(size):
 x = input_generator(4)
 
 plt.close('all')
-for i in range(10):
+for i in range(1000):
     print(i)
     discriminator.trainable = True
     discriminator.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy')
-    history = discriminator.fit(input_generator(2000), steps_per_epoch=10, epochs=epochs_discriminator)
+    history = discriminator.fit(input_generator(10000), steps_per_epoch=10, epochs=epochs_discriminator)
 
     discriminator.trainable = False
     gan.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy')
@@ -122,6 +122,6 @@ for i in range(4):
     plt.figure()
     plt.imshow(a[0][i])
     plt.show(block=False)
-    plt.title('label:{}, original:{}, discriminator:{}'.format(np.where(a[1][i]==1), b[i], p[i]))
-1
+    plt.title('label:{}, original:{}, discriminator:{}'.format(np.where(a[1][i]==1)[0], b[i], p[i]))
+
 
